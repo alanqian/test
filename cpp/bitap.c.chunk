@@ -1,0 +1,62 @@
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+
+
+#define ALPHABET_SIZE	(1 << 16L)
+typedef unsigned long 	PATTERN_MASK;
+
+// condition: strlen(pattern) < sizeof(long);
+const char* bitap_fuzzy_bitwise_search(const char* text, const char* pattern, int k)
+{
+    const char *result = NULL;
+    int m;
+    PATTERN_MASK* pattern_mask; // pattern_mask[ALPHABET_SIZE];
+    PATTERN_MASK* R;
+    int i, d;
+
+    if (pattern[0] == '\0')
+    	return text;
+
+    m = strlen(pattern);
+    if (m >= sizeof(PATTERN_MASK)) // if (m > 31)
+    	return "The pattern is too long!";
+
+    // Initialize the pattern bitmasks
+    pattern_mask = malloc((k + 1 + ALPHABET_SIZE) * sizeof(*R));
+    for (i = 0; i < ALPHABET_SIZE; i++)
+        pattern_mask[i] = ~0;
+    for (i = 0; i < m; i++)
+        pattern_mask[pattern[i]] &= ~(1UL << i);
+
+    // Initialize the bit array R
+    R = &pattern_mask[ALPHABET_SIZE];
+    for (i = 0; i <= k; i++)
+        R[i] = ~1;
+
+    for (i = 0; text[i] != '\0'; i++)
+    {
+        // update the bit arrays
+        PATTERN_MASK old_Rj = R[0];
+
+        R[0] |= pattern_mask[text[i]];
+        R[0] <<= 1;
+
+        for (j = 1; j <= k; j++)
+        {
+            PATTERN_MASK tmp = R[j];
+            // substitution is all we care about
+            R[j] = (old_Rj & (R[j] | pattern_mask[text[i]])) << 1;
+            old_Rj = tmp;
+        }
+
+        if (0 == (R[k] & (1UL << m))) 
+        {
+            result = (text+i - m) + 1;
+            break;
+        }
+    }
+
+	free(R);
+    return result;
+}

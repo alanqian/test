@@ -1,0 +1,112 @@
+                
+static unsigned long get_bmap(int fd, unsigned long block)
+{   
+    int     ret;
+    unsigned int b;
+
+    b = block;
+    ret = ioctl(fd, FIBMAP, &b); /* FIBMAP takes a pointer to an integer */
+    if (ret < 0) 
+    {
+        if (errno == EPERM) 
+        {
+            if (f)
+            {
+
+                {                /* don't log deleted symlinks */
+                    fprintf(f, "No permission to use FIBMAP ioctl.\n");
+                    fflush(f);
+                }
+            }   /* if (f) */
+
+            return 0;
+        }
+    }
+    return b;
+}
+
+int get_blocks(const char *filename)
+{
+#ifdef HAVE_FSTAT64
+    struct stat64   fileinfo;
+#else
+    struct stat     fileinfo;
+#endif
+    int             bs;
+    long            fd;
+    unsigned long   block, last_block = 0, first_cblock = 0, numblocks, i;
+    long            bpib;   /* Blocks per indirect block */
+    char            cblock_list[256];
+    char            pwd[PATH_MAX];
+
+    if (NULL != filename)
+    {
+        if (__lxstat(3, filename, &fileinfo))
+            fileinfo.st_ino = 0;
+
+        if (!realpath(filename, pwd))
+            pwd[0] = '\0';
+    }
+
+
+#ifdef HAVE_OPEN64
+    fd = open64(filename, O_RDONLY);
+#else
+    fd = open(filename, O_RDONLY);
+#endif
+    if (fd < 0) {
+        fprintf(stderr, "cannot open the file of %s\n", filename); 
+        return -1;
+    }
+
+    if (ioctl(fd, FIGETBSZ, &bs) < 0) { /* FIGETBSZ takes an int */
+        perror("FIGETBSZ");
+        close(fd);
+        return -1;
+    }
+
+    bpib = bs / 4;
+    numblocks = (fileinfo.st_size + (bs-1)) / bs;
+
+    sprintf(block_list, "%ld,%ld::%ld::%ld::%ld::",
+        (long) (fileinfo.st_dev & 0xff00) / 256,
+        (long) fileinfo.st_dev & 0xff,
+        (long) fileinfo.st_ino,
+        (long) fileinfo.st_size, (long)bs);
+
+    for (i=0; i < numblocks; i++) {
+        block = get_bmap(fd, i);
+
+        if (last_block == 0) {
+            first_cblock = block;
+        }
+        if (last_block && (block != last_block +1) ) {
+            sprintf(cblock_list, "(%ld-%ld):%ld-%ld,", 
+                i-(last_block-first_cblock)-1, i-1, first_cblock, last_block);
+            strcat(block_list, cblock_list);
+            first_cblock = block;
+        }
+
+        if (i ==  numblocks - 1 ) {
+            if (last_block == 0) {
+                sprintf(cblock_list, "(%ld-%ld):%ld-%ld", i, i, first_cblock, block);
+            }
+            else {
+                sprintf(cblock_list, "(%ld-%ld):%ld-%ld",
+                    i-(last_block-first_cblock)-1, i, first_cblock, block);
+            }
+
+            strcat(block_list, cblock_list);
+        }
+
+        last_block = block;
+    }
+
+    sprintf(cblock_list, "::%s", pwd[0] ? pwd : filename);
+    strcat(block_list, cblock_list);
+
+    close(fd);
+
+    return 0;
+}
+

@@ -1,0 +1,79 @@
+http://www.ibm.com/developerworks/cn/web/wa-lo-firefox-ext/
+http://www.xulplanet.com/
+参考资料
+学习
+
+    * 在 Mozilla 开发者中心的扩展开发专题 中学习更多关于扩展开发的知识。
+
+    * 在 Mozilla 开发者中心的 XPCOM 专题 中学习更多关于 XPCOM 的知识。
+
+    * 在 XUL Planet 中学习更多关于 XUL 的知识。
+
+    * 阅读“XUL － 快速开发跨平台易用用户接口的新途径”：介绍 XML User-interface Language - 基于 XML 的用户接口语言。
+
+    * 阅读“XML 用户界面语言（XUL）开发入门”：在这个教程中，您将使用 XUL 进行编程。
+
+    * 阅读“使用 XUL 实现浏览器扩展，第 1 部分: 使用用户界面特性创建一个 Firefox 浏览器扩展”：介绍如何创建超越 Web 浏览器内置功能的扩展。
+
+    * 阅读“使用 XUL 实现浏览器扩展，第 2 部分: 组建一个跨平台的 Firefox 扩展”：了解如何构建功能强大的灵活的 Mozilla 浏览器扩展。
+
+    * 阅读“创建动态的 Firefox 用户界面”：学习如何使用 Ajax 从 Web 服务器下载 XML 数据，以及如何使用 XSLT 将 XML 数据动态地转换为用 XUL 表达的 Firefox 用户界面元素。
+
+    * 通过 developerWorks Web 开发专区 中介绍 Web 技术的文章和教程扩展您的网站开发技
+
+
+IBM的developer works上有一篇关于firefox扩展开发的文章，链接如下：
+
+http://www.ibm.com/developerworks/cn/web/wa-lo-firefox-ext/
+
+不过这篇文章是针对firefox 2写的，和新的firefox 3不兼容
+
+ 
+
+好在该文要实现的功能很简单，因此稍加修改就可以适应firefox 3了，这里只记录一下需要修改的地方，谁要是有兴趣可以直接看原文
+
+ 
+
+修改的地方一
+
+firefox打开用户配置文件管理的运行参数是firefox -no-remote  -ProfileManager，按文中说的firefox -P是无用的
+
+ 
+
+修改的地方二
+
+扩展的描述文件install.rdf和update.rdf版本过旧。我猜测firefox是根据这两个文件来判断版本兼容性的，所以会导致扩展无法使用。修改这两个文件中这些地方即可：
+
+<em:version>1.2.1</em:version>
+
+<em:maxVersion>3.9</em:maxVersion>
+
+ 
+
+修改的地方三
+
+在 mainWindow下载单张图片的downloadSingleImage方法中的最后一句有问题：假如使用FireFox3版本是不能用 streamLoader.init(channel,observer,null);进不去的，要用 streamLoader.init(observer);channel.asyncOpen(streamLoader,channel);
+
+ 
+
+修改的地方四：
+
+mainWindow 展示图片列表的displayImages方法中，hbox = document.createElementNS(XUL_NS, "hbox");这一句外面的else{应该去掉，不然会跳过图片。（这已经不是一个兼容性的问题了，完全是一个程序逻辑错误....）
+
+ 
+
+改完以后，基本上这个扩展就可以使用了。不过有时候还是出现某些图片无法显示，无法下载的问题（但手动下载没有问题），应该是哪里还有问题。不过今天实在没有时间弄了。总体来说这是一个很实用的扩展，以后有时间的话再把它研究研究吧。
+
+ 
+
+----------------------------------------
+
+ 
+
+解决了最后一个问题。实际上就是有些img标签的src不是以http开头的，所以需要displayImages中添加处理的方法：var test = imageNode.getAttribute("src");
+        var imageSrc = test.substring(test.indexOf("http"));
+
+另外对于大的图片，由于是异步下载，全部遍历完后可能还没下完，所以会出现大的图片下载不了。现在想了个临时方法，就是遍历完后加一个 alert（“download ok”），延迟一下关闭的时间。这样用户发现进度条满了以后，再点击alert出来的窗口关闭，就可以保证所有图片下载完了。
+
+       其实好点的做法应该是额外开辟一个关闭按钮，让用户发现进度慢了后点击再关闭扩展（和firefox默认的下载器一样），以后再改咯。
+

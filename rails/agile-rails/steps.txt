@@ -1,0 +1,32 @@
+Iteration A1: Creating the Products Maintenance Application
+Iteration A2: Making Prettier Listings
+Iteration B1: Validating!
+Iteration B2: Unit Testing of Models
+Iteration C1: Creating the Catalog Listing
+Iteration C2: Adding a Page Layout
+Iteration C3: Using a Helper to Format the Price
+Iteration C4: Functional Testing of Controllers
+Iteration D1: Finding a Cart
+Iteration D2: Connecting Products to Carts
+Iteration D3: Adding a Button
+Iteration E1: Creating a Smarter Cart
+Iteration E2: Handling Errors
+Iteration E3: Finishing the Cart
+Iteration F1: Moving the Cart
+Iteration F2: Creating an Ajax-Based Cart
+Iteration F3: Highlighting Changes
+Iteration F4: Hiding an Empty Cart
+Iteration F5: Making Images Clickable
+Iteration G1: Capturing an Order
+Iteration G2: Atom Feeds
+Iteration G3: Pagination
+Iteration I1: Adding Users
+Iteration I2: Authenticating Users
+Iteration I3: Limiting Access
+Iteration I4: Adding a Sidebar, More Administration
+Iteration J1: Selecting the Locale
+Iteration J2: Translating the Storefront
+Iteration J3: Translating Checkout
+Iteration J4: Add a Locale Switcher
+
+
