@@ -1,0 +1,7 @@
+git init
+git-private.sh
+git add -A
+git commit -a -m "dot: first commit"
+git remote add origin git@github.com:alanqian/dot.git
+git push -u origin master
+

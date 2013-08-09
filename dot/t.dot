@@ -1,0 +1,8 @@
+digraph {
+  {rank = same a b c d e f }
+  a -> b -> c -> d -> e -> f
+  a -> f
+  b -> d -> f
+  b -> f
+}
+
